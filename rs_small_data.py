@@ -127,62 +127,15 @@ def matrix_fac(K, regCo, ratings_by_i, ratings_by_j):
 				user_ind=ratings_by_j[j][:,0]
 				user_ind=[int(user_ind[i]) for i in range(user_ind.shape[0])]
 				V[:,j]=np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind))).ravel()
-		r_hat=U.dot(V)
-		#rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	'''
-	B = np.zeros(M)
-	C = np.zeros(N)
-	r_hat=np.zeros([M,N])
-	Q=np.zeros([M,N])
-	T = 100 # 100 epochs for now
-	for t in xrange(T):
-		# update B
-		for i in xrange(M):
-			if i in ratings_by_i:
-				accum = 0
-				for j, r in ratings_by_i[i]:
-					accum += (r - U[i,:].dot(V[:,int(j)]) - C[int(j)] - mu)
-				B[i] = accum / (1 + reg) / len(ratings_by_i[i])
-
-	  # update U
-	for i in xrange(M):
-		if i in ratings_by_i:
-			matrix = np.zeros((K, K)) + reg*np.eye(K)
-			vector = np.zeros(K)
-			for j, r in ratings_by_i[i]:
-				matrix += np.outer(V[:,j], V[:,j])
-				vector += (r - B[i] - C[j] - mu)*V[:,j]
-			U[i,:] = np.linalg.solve(matrix, vector)
-
-	  # update C
-	for j in xrange(N):
-		if j in ratings_by_j:
-			accum = 0
-			for i, r in ratings_by_j[j]:
-				accum += (r - U[i,:].dot(V[:,j]) - B[i] - mu)
-			print(len(ratings_by_j[j]))
-			C[j] = accum / (1 + reg) / len(ratings_by_j[j])
-
-	  # update V
-	for j in xrange(N):
-		if j in ratings_by_j:
-			matrix = np.zeros((K, K)) + reg*np.eye(K)
-			vector = np.zeros(K)
-			for i, r in ratings_by_j[j]:
-				matrix += np.outer(U[i,:], U[i,:])
-				vector += (r - B[i] - C[j] - mu)*U[i,:]
-			V[:,j] = np.linalg.solve(matrix, vector)
 	r_hat=U.dot(V)
-	rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	'''
-	error = np.mean(np.sum(abs(Q - r_hat)))
+	error = np.mean(abs(Q - r_hat))
 	print "Training error",error
 	return r_hat
 def test():
 	#test_user_id = np.zeros(len(test))
 	#test_item_id = np.zeros(len(test))
 	test_data = list(testSet)
-	print test_data[0]
+	#print test_data[0]
 
 	test_result = np.zeros(len(test_data))
 	test_pred = np.zeros(len(test_data))
@@ -196,25 +149,14 @@ def test():
 			test_user_id = test_data[i][0]
 			test_item_id = test_data[i][1]
 			test_result[i] = test_data[i][2]
-			#print test_result[i]
+
 			test_pred[i] = r_hat[test_user_id,test_item_id]
-			#true = test_result[i]
-			#if (true == int(test_pred[i]) or true == int(test_pred[i])+1 or true == int(test_pred[i])-1):accuracy+=1
-		#print(test_result)
-		#print(test_pred)
-		error = np.mean(np.sum(abs(test_result - test_pred)))
+
+		error = np.mean(abs(test_result - test_pred))
 		print "Test error",error
-		
-		#error = float(accuracy)/len(test_result)
-		#print sq_error
-		#print error'''
-		#train_pred = [0]*len(train_user_id)
-		#for i in range(len(train_user_id)):
-			#print(train_user_id[i],train_item_id[i])
-			#train_pred[i] = r_hat[int(train_user_id[i]),int(train_item_id[i])]
-		#error = np.sum(abs(train_rating - train_pred))/len(train_rating)
-		#print(error)
+
 	for regCo in [0.1,0.5,1,1.5,2]:
+		print "regularization = ",regCo
 		facAndTest(5, regCo)
 
 density = 10
