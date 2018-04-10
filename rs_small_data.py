@@ -30,13 +30,13 @@ def findValid():
     #count the number of reviews by each person
     reviewers, counts = np.unique(reviewerbyreviews, return_counts=True)  
     reviewersMap = dict(list(zip(reviewers,range(len(reviewers)))))
-    validSeq = np.argwhere(counts>10)
+    validSeq = np.argwhere(counts>=density)
     validList = [review for review in rawList if [reviewersMap[review[0]]] in validSeq]
     return validList
 
 def separate(validList):
-	reviewersbyreviews = np.array(validList)[:,0]
-	reviewers = np.unique(reviewersbyreviews)
+	reviewersbyreviews = np.array(validList)[:,0]#string
+	reviewers = np.unique(reviewersbyreviews)#string
 	reviewersMap = dict(list(zip(reviewers,range(len(reviewers)))))
 	itemsbyreviews = np.array(validList)[:,1]
 	items = np.unique(itemsbyreviews)
@@ -46,7 +46,8 @@ def separate(validList):
 	validSet = set(validList)
 	testSet = set()
 	for reviewer in reviewers:
-	    testSet.add(validList[list(reviewersbyreviews).index(reviewer)])
+		availableRecords = [review for review in validList if (review[0] == reviewersMap[reviewer])]
+		testSet.add(random.sample(availableRecords,density/5))
 	trainSet = validSet.difference(testSet)
 	return validSet, trainSet,testSet, reviewersMap, itemsMap
 
@@ -204,7 +205,8 @@ def test():
 		error = np.sum(abs(train_rating - train_pred))/len(train_rating)
 		print(error)
 	for regCo in range(110,200,10):
-		facAndTest(15, regCo/5*0.100-2.200)
+		facAndTest(15, regCo)
+density = 50
 user,item,train_user_id,train_item_id,train_rating,testSet = dataProcessing()
 ratings_by_i,ratings_by_j = create_rating_list()
 test()	
