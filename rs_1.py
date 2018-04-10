@@ -71,54 +71,102 @@ def create_rating_list():
 	ratings_by_j=dict()
 	
 	for key,value in user.iteritems():
+<<<<<<< HEAD
+		#pair = [i for i, x in enumerate(train_user_id) if x == value]
+		#print pair
+		pair=np.argwhere(train_user_id==value)
+		#print type(pair)
+		#value = int(value)
+		#print train_item_id[pair]
+		ratings_by_i[value]=[[train_item_id[pair][j],train_rating[pair][j]] for j in range(len(pair))]
+	print "finish creating ratings by i"
+	for key,value in item.iteritems():
+			#pair =  [i for i, x in enumerate(train_item_id) if x == value]
+		pair = np.argwhere(train_item_id == value)
+		ratings_by_j[value]=[[train_user_id[pair][k],train_rating[pair][k]] for k in range(len(pair))]
+	print "finish creating ratings by j"
+=======
 		pair=np.argwhere(train_user_id==value)
 		ratings_by_i[value]=np.array([(train_item_id[pair[j][0]],train_rating[pair[j][0]]) for j in range(pair.shape[0])]).astype(int)
 	for key,value in item.iteritems():
 		pair = np.argwhere(train_item_id==value)
 		ratings_by_j[value]=np.array([(train_user_id[pair[k][0]],train_rating[pair[k]][0]) for k in range(pair.shape[0])]).astype(int)
+>>>>>>> c5ffe34454f7ff491ac6841365db412c5e48b856
 	return ratings_by_i,ratings_by_j
 
 def matrix_fac():
 	ratings_by_i,ratings_by_j = create_rating_list()
+<<<<<<< HEAD
+	M = len(ratings_by_i)
+	N = len(ratings_by_j)
+	#print M,N
+=======
 	M = len(user)
 	N = len(item)
+>>>>>>> c5ffe34454f7ff491ac6841365db412c5e48b856
 	K = 5
 	mu=sum(train_rating)/len(train_rating)
 	reg=1/statistics.pvariance(train_rating,mu)
 	U = np.random.randn(M, K) / K
 	V = np.random.randn(K, N) / K
+<<<<<<< HEAD
+	r_hat = [[]*N for _ in range(M)]
+	#r_hat =  [[None for _ in range(N)] for _ in range(M)]
+		#r_hat=np.zeros([M,N])
+	Q =  [[]*N for _ in range(M)]
+	#Q=np.zeros([M,N])
+=======
 	#r_hat=np.zeros([M,N])
 	"""
 	Q=np.zeros([M,N])
+>>>>>>> c5ffe34454f7ff491ac6841365db412c5e48b856
 	for i in ratings_by_i:
 		i=int(i)
-		if ratings_by_i[i].shape[0]>0:
-			ind_movie=ratings_by_i[i][:,0]
-			ind_rating=ratings_by_i[i][:,1]
-			ind_movie=[int(ind_movie[j]-1) for j in range(ind_movie.shape[0])]
+		if len(ratings_by_i[i])>0:
+			find_array = np.array(ratings_by_i[i])
+			print find_array
+			#print ratings_by_i[i]
+			#print ratings_by_i[i][:,0]
+			#print find_array[:,0]
+			ind_movie = find_array[:,0]
+
+			#ind_movie=ratings_by_i[i][:,0]
+			ind_rating = find_array[:,1]
+			#ind_rating=ratings_by_i[i][:,1]
+			#ind_movie=[int(ind_movie[j]-1) for j in range(len(ind_movie))]
+			#print ind_rating,ind_movie
 			#print(ind_movie)
-			Q[i-1,ind_movie]=ind_rating.ravel()
+			Q[i-1][ind_movie-1]
+			for ind in range(len(ind_movie)):
+				#print ind_movie
+				#print ind,ind_rating,ind_movie[ind]
+				#print ind_movie[ind]-1
+				#print len(Q[0])
+				#print ind_rating[ind], ind_movie[ind]-1
+				#print Q
+				Q[i-1][int(ind_movie[ind]-1)] = ind_rating[ind]
+						#Q[i-1,ind_movie]=ind_rating
 
 	#print(R_pre.shape)
 
 	
 	for t in range(100):
 		for i in range(M):
-			if ratings_by_i[i+1].shape[0]>0:
-				rate_ind=np.zeros(ratings_by_i[i+1].shape[0])
+			if len(ratings_by_i[i+1])>0:
+				rate_ind=np.zeros(len(ratings_by_i[i+1]))
 				#print(ratings_by_i[i+1].shape)
-				rate_ind=ratings_by_i[i+1][:,1]
-				movie_ind=np.zeros(ratings_by_i[i+1].shape[0])
-				movie_ind=ratings_by_i[i+1][:,0]
-				movie_ind=[int(movie_ind[j]-1) for j in range(movie_ind.shape[0])]
+				rate_ind=ratings_by_i[i+1][:][1]
+				movie_ind=np.zeros(len(ratings_by_i[i+1]))
+				movie_ind=ratings_by_i[i+1][:][0]
+				movie_ind=[int(movie_ind[j]-1) for j in range(len(movie_ind))]
 				U[i,:]=np.linalg.inv(V[:,movie_ind].dot(V[:,movie_ind].T)+reg*np.eye(K)).dot(V[:,movie_ind].dot(rate_ind)).ravel()       
 		for j in range(N):
-			if ratings_by_j[j+1].shape[0]>0:
-				rate_ind=np.zeros(ratings_by_j[j+1].shape[0])
-				rate_ind=ratings_by_j[j+1][:,1]
-				user_ind=np.zeros(ratings_by_j[j+1].shape[0])
-				user_ind=ratings_by_j[j+1][:,0]
-				user_ind=[int(user_ind[i]-1) for i in range(user_ind.shape[0])]
+			if len(ratings_by_j[j+1])>0:
+				rate_ind=np.zeros(len(ratings_by_j[j+1]))
+				rate_ind=ratings_by_j[j+1][:][1]
+				user_ind=np.zeros(len(ratings_by_j[j+1]))
+				user_ind=ratings_by_j[j+1][:][0]
+				user_ind=[int(user_ind[i]-1) for i in range(len(user_ind))]
 				V[:,j]=np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind))).ravel()
 		r_hat=U.dot(V)
 		rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))

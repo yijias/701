@@ -46,8 +46,17 @@ def separate(validList):
 	validSet = set(validList)
 	testSet = set()
 	for reviewer in reviewers:
+<<<<<<< HEAD
 		availableRecords = [review for review in validList if (review[0] == reviewersMap[reviewer])]
 		testSet.add(random.sample(availableRecords,density/5))
+=======
+		availableRecords = set(review for review in validList if (review[0] == reviewersMap[reviewer]))
+		random_sample_test = set(random.sample(availableRecords,density/5))
+		for i in random_sample_test:
+			#print type(i)
+			testSet.add(i)
+		#testSet.add(set(random.sample(availableRecords,density/5)))
+>>>>>>> master
 	trainSet = validSet.difference(testSet)
 	return validSet, trainSet,testSet, reviewersMap, itemsMap
 
@@ -87,7 +96,7 @@ def matrix_fac(K, regCo, ratings_by_i, ratings_by_j):
 	#K = 15
 	mu=sum(train_rating)/len(train_rating)
 	reg=regCo/statistics.pvariance(train_rating,mu)
-	print(reg)
+	#print(reg)
 	U = np.random.randn(M, K) / K
 	V = np.random.randn(K, N) / K
 	r_hat=np.zeros([M,N])
@@ -123,73 +132,31 @@ def matrix_fac(K, regCo, ratings_by_i, ratings_by_j):
 				user_ind=ratings_by_j[j][:,0]
 				user_ind=[int(user_ind[i]) for i in range(user_ind.shape[0])]
 				V[:,j]=np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind))).ravel()
-		r_hat=U.dot(V)
-		#rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	'''
-	B = np.zeros(M)
-	C = np.zeros(N)
-	r_hat=np.zeros([M,N])
-	Q=np.zeros([M,N])
-	T = 100 # 100 epochs for now
-	for t in xrange(T):
-		# update B
-		for i in xrange(M):
-			if i in ratings_by_i:
-				accum = 0
-				for j, r in ratings_by_i[i]:
-					accum += (r - U[i,:].dot(V[:,int(j)]) - C[int(j)] - mu)
-				B[i] = accum / (1 + reg) / len(ratings_by_i[i])
-
-	  # update U
-	for i in xrange(M):
-		if i in ratings_by_i:
-			matrix = np.zeros((K, K)) + reg*np.eye(K)
-			vector = np.zeros(K)
-			for j, r in ratings_by_i[i]:
-				matrix += np.outer(V[:,j], V[:,j])
-				vector += (r - B[i] - C[j] - mu)*V[:,j]
-			U[i,:] = np.linalg.solve(matrix, vector)
-
-	  # update C
-	for j in xrange(N):
-		if j in ratings_by_j:
-			accum = 0
-			for i, r in ratings_by_j[j]:
-				accum += (r - U[i,:].dot(V[:,j]) - B[i] - mu)
-			print(len(ratings_by_j[j]))
-			C[j] = accum / (1 + reg) / len(ratings_by_j[j])
-
-	  # update V
-	for j in xrange(N):
-		if j in ratings_by_j:
-			matrix = np.zeros((K, K)) + reg*np.eye(K)
-			vector = np.zeros(K)
-			for i, r in ratings_by_j[j]:
-				matrix += np.outer(U[i,:], U[i,:])
-				vector += (r - B[i] - C[j] - mu)*U[i,:]
-			V[:,j] = np.linalg.solve(matrix, vector)
 	r_hat=U.dot(V)
-	rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	'''
+	error = np.mean(abs(Q - r_hat))
+	print "Training error",error
 	return r_hat
 def test():
 	#test_user_id = np.zeros(len(test))
 	#test_item_id = np.zeros(len(test))
 	test_data = list(testSet)
+	#print test_data[0]
+
 	test_result = np.zeros(len(test_data))
 	test_pred = np.zeros(len(test_data))
 	
 	def facAndTest(K, regCo):
 		accuracy = 0
 		r_hat = matrix_fac(K, regCo,ratings_by_i,ratings_by_j)
-		'''
+		
 		for i in range(len(test_data)):
 			#print(test_data[i][0])
 			test_user_id = test_data[i][0]
 			test_item_id = test_data[i][1]
 			test_result[i] = test_data[i][2]
-			#print test_result[i]
+
 			test_pred[i] = r_hat[test_user_id,test_item_id]
+<<<<<<< HEAD
 			#true = test_result[i]
 			#if (true == int(test_pred[i]) or true == int(test_pred[i])+1 or true == int(test_pred[i])-1):accuracy+=1
 		print(test_result)
@@ -207,6 +174,17 @@ def test():
 	for regCo in range(110,200,10):
 		facAndTest(15, regCo)
 density = 50
+=======
+
+		error = np.mean(abs(test_result - test_pred))
+		print "Test error",error
+
+	for regCo in [0.1,0.5,1,1.5,2]:
+		print "regularization = ",regCo
+		facAndTest(5, regCo)
+
+density = 10
+>>>>>>> master
 user,item,train_user_id,train_item_id,train_rating,testSet = dataProcessing()
 ratings_by_i,ratings_by_j = create_rating_list()
 test()	
