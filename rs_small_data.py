@@ -30,7 +30,7 @@ def findValid():
     #count the number of reviews by each person
     reviewers, counts = np.unique(reviewerbyreviews, return_counts=True)  
     reviewersMap = dict(list(zip(reviewers,range(len(reviewers)))))
-    validSeq = np.argwhere(counts>50)
+    validSeq = np.argwhere(counts>10)
     validList = [review for review in rawList if [reviewersMap[review[0]]] in validSeq]
     return validList
 
@@ -76,53 +76,55 @@ def create_rating_list():
 	for key,value in item.iteritems():
 		pair = np.argwhere(train_item_id==value)
 		ratings_by_j[value]=np.array([(train_user_id[pair[k][0]],train_rating[pair[k]][0]) for k in range(pair.shape[0])]).astype(int)
+	#print(ratings_by_i)
+	#print(ratings_by_j)
 	return ratings_by_i,ratings_by_j
 
-def matrix_fac():
-	ratings_by_i,ratings_by_j = create_rating_list()
-	M = len(user)
-	N = len(item)
-	K = 5
+def matrix_fac(K, regCo, ratings_by_i, ratings_by_j):
+	M = len(ratings_by_i)
+	N = len(ratings_by_j)
+	#K = 15
 	mu=sum(train_rating)/len(train_rating)
-	reg=1/statistics.pvariance(train_rating,mu)
+	reg=regCo/statistics.pvariance(train_rating,mu)
+	print(reg)
 	U = np.random.randn(M, K) / K
 	V = np.random.randn(K, N) / K
-	#r_hat=np.zeros([M,N])
-	"""
+	r_hat=np.zeros([M,N])
+	
 	Q=np.zeros([M,N])
 	for i in ratings_by_i:
 		i=int(i)
 		if ratings_by_i[i].shape[0]>0:
 			ind_movie=ratings_by_i[i][:,0]
 			ind_rating=ratings_by_i[i][:,1]
-			ind_movie=[int(ind_movie[j]-1) for j in range(ind_movie.shape[0])]
+			ind_movie=[int(ind_movie[j]) for j in range(ind_movie.shape[0])]
 			#print(ind_movie)
-			Q[i-1,ind_movie]=ind_rating.ravel()
+			Q[i,ind_movie]=ind_rating.ravel()
 
 	#print(R_pre.shape)
 
 	
 	for t in range(100):
 		for i in range(M):
-			if ratings_by_i[i+1].shape[0]>0:
-				rate_ind=np.zeros(ratings_by_i[i+1].shape[0])
+			if len(ratings_by_i[i])>0:
+				rate_ind=np.zeros(len(ratings_by_i[i]))
 				#print(ratings_by_i[i+1].shape)
-				rate_ind=ratings_by_i[i+1][:,1]
-				movie_ind=np.zeros(ratings_by_i[i+1].shape[0])
-				movie_ind=ratings_by_i[i+1][:,0]
-				movie_ind=[int(movie_ind[j]-1) for j in range(movie_ind.shape[0])]
+				rate_ind=ratings_by_i[i][:,1]
+				movie_ind=np.zeros(len(ratings_by_i[i]))
+				movie_ind=ratings_by_i[i][:,0]
+				movie_ind=[int(movie_ind[j]) for j in range(movie_ind.shape[0])]
 				U[i,:]=np.linalg.inv(V[:,movie_ind].dot(V[:,movie_ind].T)+reg*np.eye(K)).dot(V[:,movie_ind].dot(rate_ind)).ravel()       
 		for j in range(N):
-			if ratings_by_j[j+1].shape[0]>0:
-				rate_ind=np.zeros(ratings_by_j[j+1].shape[0])
-				rate_ind=ratings_by_j[j+1][:,1]
-				user_ind=np.zeros(ratings_by_j[j+1].shape[0])
-				user_ind=ratings_by_j[j+1][:,0]
-				user_ind=[int(user_ind[i]-1) for i in range(user_ind.shape[0])]
+			if len(ratings_by_j[j])>0:
+				rate_ind=np.zeros(len(ratings_by_j[j]))
+				rate_ind=ratings_by_j[j][:,1]
+				user_ind=np.zeros(len(ratings_by_j[j]))
+				user_ind=ratings_by_j[j][:,0]
+				user_ind=[int(user_ind[i]) for i in range(user_ind.shape[0])]
 				V[:,j]=np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind))).ravel()
 		r_hat=U.dot(V)
-		rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	"""	
+		#rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
+	'''
 	B = np.zeros(M)
 	C = np.zeros(N)
 	r_hat=np.zeros([M,N])
@@ -167,7 +169,7 @@ def matrix_fac():
 			V[:,j] = np.linalg.solve(matrix, vector)
 	r_hat=U.dot(V)
 	rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	
+	'''
 	return r_hat
 def test():
 	#test_user_id = np.zeros(len(test))
@@ -175,16 +177,34 @@ def test():
 	test_data = list(testSet)
 	test_result = np.zeros(len(test_data))
 	test_pred = np.zeros(len(test_data))
-	r_hat = matrix_fac()
-	for i in range(len(test_data)):
-		#print(test_data[i][0])
-		test_user_id = test_data[i][0]
-		test_item_id = test_data[i][1]
-		test_result[i] = test_data[i][2]
-		#print test_result[i]
-		test_pred[i] = r_hat[test_user_id-1,test_item_id-1]
-	sq_error = np.mean((test_result - test_pred)**2)
-	print sq_error
-
+	
+	def facAndTest(K, regCo):
+		accuracy = 0
+		r_hat = matrix_fac(K, regCo,ratings_by_i,ratings_by_j)
+		'''
+		for i in range(len(test_data)):
+			#print(test_data[i][0])
+			test_user_id = test_data[i][0]
+			test_item_id = test_data[i][1]
+			test_result[i] = test_data[i][2]
+			#print test_result[i]
+			test_pred[i] = r_hat[test_user_id,test_item_id]
+			#true = test_result[i]
+			#if (true == int(test_pred[i]) or true == int(test_pred[i])+1 or true == int(test_pred[i])-1):accuracy+=1
+		print(test_result)
+		print(test_pred)
+		error = np.sum(abs(test_result - test_pred))/len(test_result)
+		#error = float(accuracy)/len(test_result)
+		#print sq_error
+		print error'''
+		train_pred = [0]*len(train_user_id)
+		for i in range(len(train_user_id)):
+			#print(train_user_id[i],train_item_id[i])
+			train_pred[i] = r_hat[int(train_user_id[i]),int(train_item_id[i])]
+		error = np.sum(abs(train_rating - train_pred))/len(train_rating)
+		print(error)
+	for regCo in range(110,200,10):
+		facAndTest(15, regCo/5*0.100-2.200)
 user,item,train_user_id,train_item_id,train_rating,testSet = dataProcessing()
+ratings_by_i,ratings_by_j = create_rating_list()
 test()	
