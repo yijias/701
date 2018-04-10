@@ -2,54 +2,67 @@ import os
 import numpy as np
 import random
 import statistics
+def stringToNumberUser(reviewList):
+    reviewers = list(set([review[0] for review in reviewList]))
+    #map reviewerID to order number
+    reviewersMap = dict(list(zip(reviewers,range(len(reviewers)))))
+    return reviewers,reviewersMap
 
-def dataToArray():
-	path = os.getcwd()
-	file = path + '/ratings_Musical_Instruments.csv'
-	f = open(file,'r')
-	rawString = f.read()
-	rawList = rawString.split('\n')[:-1]
-	#print type(rawList)
-	user = dict()
-	item = dict()
-	user_id = 0
-	item_id = 0
-	random_row = random.sample(xrange(len(rawList)),375000)
-	train = set(rawList[x] for x in random_row)
-	test_data = list(set(rawList) - train)
-	#print type(test)
-	#print len(random_row)
+def stringToNumberItem(reviewList):
+    items = list(set([review[1] for review in reviewList]))
+    #map reviewerID to order number
+    itemsMap = dict(list(zip(items,range(len(items)))))
+    return items, itemsMap
+
+def findValid():
+    path = os.getcwd()
+    file = path + '/ratings_Musical_Instruments.csv'
+    f = open(file,'r')
+    rawString = f.read()
+    rawList = rawString.split('\n')[:-1]
+    for i in range(len(rawList)):
+        rawList[i] = rawList[i].split(',')
+        rawList[i] = tuple(rawList[i][:-1])
+    #Above got the raw list of all reviews
+    #reviewers, reviewersMap= stringToNumberUser(rawList)
+    #print(len(reviewers))
+    reviewerbyreviews = np.array(rawList)[:,0]
+    #count the number of reviews by each person
+    reviewers, counts = np.unique(reviewerbyreviews, return_counts=True)  
+    reviewersMap = dict(list(zip(reviewers,range(len(reviewers)))))
+    validSeq = np.argwhere(counts>50)
+    validList = [review for review in rawList if [reviewersMap[review[0]]] in validSeq]
+    return validList
+
+def separate(validList):
+	reviewersbyreviews = np.array(validList)[:,0]
+	reviewers = np.unique(reviewersbyreviews)
+	reviewersMap = dict(list(zip(reviewers,range(len(reviewers)))))
+	itemsbyreviews = np.array(validList)[:,1]
+	items = np.unique(itemsbyreviews)
+	itemsMap = dict(list(zip(items,range(len(items)))))
+	for i in range(len(validList)):
+	    validList[i] = tuple([reviewersMap[validList[i][0]], itemsMap[validList[i][1]], float(validList[i][2])])
+	validSet = set(validList)
+	testSet = set()
+	for reviewer in reviewers:
+	    testSet.add(validList[list(reviewersbyreviews).index(reviewer)])
+	trainSet = validSet.difference(testSet)
+	return validSet, trainSet,testSet, reviewersMap, itemsMap
+
+def dataProcessing():
+	validList = findValid()#valid records with strings as ID's
+	validSet, trainSet, testSet, user, item = separate(validList)
 	# train__id is the id from training data, they are duplicated entries, 
 	# one user can rate multiple items
-	# user_id contains unique user's id
+	# user maps user string to number
 	# item_id contains unique item's id
-	training_len = len(random_row)
-	train_user_id=np.zeros(training_len)
-	train_item_id=np.zeros(training_len)
-	train_rating=np.zeros(training_len)
-	#print len(train_user_id)
-	#for i in random_row:
-	for row in range(len(rawList)):
-		rawList[row] = rawList[row].split(',')
-		rawList[row] = tuple(rawList[row][:-1])
-
-		if rawList[row][0] not in user:
-			user_id+=1
-			user[rawList[row][0]] = user_id
-		if rawList[row][1] not in item:
-			item_id+=1
-			item[rawList[row][1]] = item_id
-
-	for i in range(training_len):
-		row = random_row[i]
-		train_user_id[i] = user[rawList[row][0]]
-		train_item_id[i] = item[rawList[row][1]]
-		train_rating[i] = rawList[row][2]
-
-
-	return user,item,train_user_id,train_item_id,train_rating,test_data
-
-user,item,train_user_id,train_item_id,train_rating,test_data = dataToArray()
+	trainList = np.array(list(trainSet))
+	training_len = len(trainList)
+	train_user_id = trainList[:,0]
+	train_item_id = trainList[:,1]
+	train_rating = trainList[:,2]
+	return user,item,train_user_id,train_item_id,train_rating,testSet
 
 def create_rating_list():
 	#### creating dictionary for the set of all user i that have rated item j with rating r.
@@ -58,6 +71,7 @@ def create_rating_list():
 	ratings_by_j=dict()
 	
 	for key,value in user.iteritems():
+<<<<<<< HEAD
 		#pair = [i for i, x in enumerate(train_user_id) if x == value]
 		#print pair
 		pair=np.argwhere(train_user_id==value)
@@ -71,23 +85,41 @@ def create_rating_list():
 		pair = np.argwhere(train_item_id == value)
 		ratings_by_j[value]=[[train_user_id[pair][k],train_rating[pair][k]] for k in range(len(pair))]
 	print "finish creating ratings by j"
+=======
+		pair=np.argwhere(train_user_id==value)
+		ratings_by_i[value]=np.array([(train_item_id[pair[j][0]],train_rating[pair[j][0]]) for j in range(pair.shape[0])]).astype(int)
+	for key,value in item.iteritems():
+		pair = np.argwhere(train_item_id==value)
+		ratings_by_j[value]=np.array([(train_user_id[pair[k][0]],train_rating[pair[k]][0]) for k in range(pair.shape[0])]).astype(int)
+>>>>>>> c5ffe34454f7ff491ac6841365db412c5e48b856
 	return ratings_by_i,ratings_by_j
 
 def matrix_fac():
 	ratings_by_i,ratings_by_j = create_rating_list()
+<<<<<<< HEAD
 	M = len(ratings_by_i)
 	N = len(ratings_by_j)
 	#print M,N
+=======
+	M = len(user)
+	N = len(item)
+>>>>>>> c5ffe34454f7ff491ac6841365db412c5e48b856
 	K = 5
 	mu=sum(train_rating)/len(train_rating)
 	reg=1/statistics.pvariance(train_rating,mu)
 	U = np.random.randn(M, K) / K
 	V = np.random.randn(K, N) / K
+<<<<<<< HEAD
 	r_hat = [[]*N for _ in range(M)]
 	#r_hat =  [[None for _ in range(N)] for _ in range(M)]
 		#r_hat=np.zeros([M,N])
 	Q =  [[]*N for _ in range(M)]
 	#Q=np.zeros([M,N])
+=======
+	#r_hat=np.zeros([M,N])
+	"""
+	Q=np.zeros([M,N])
+>>>>>>> c5ffe34454f7ff491ac6841365db412c5e48b856
 	for i in ratings_by_i:
 		i=int(i)
 		if len(ratings_by_i[i])>0:
@@ -116,7 +148,7 @@ def matrix_fac():
 						#Q[i-1,ind_movie]=ind_rating
 
 	#print(R_pre.shape)
-	print "finish creating Q matrix"
+
 	
 	for t in range(100):
 		for i in range(M):
@@ -137,21 +169,21 @@ def matrix_fac():
 				user_ind=[int(user_ind[i]-1) for i in range(len(user_ind))]
 				V[:,j]=np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind))).ravel()
 		r_hat=U.dot(V)
-		#rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	"""
+		rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
+	"""	
 	B = np.zeros(M)
 	C = np.zeros(N)
 	r_hat=np.zeros([M,N])
+	Q=np.zeros([M,N])
 	T = 100 # 100 epochs for now
 	for t in xrange(T):
 		# update B
 		for i in xrange(M):
 			if i in ratings_by_i:
-
 				accum = 0
 				for j, r in ratings_by_i[i]:
-					accum += (r - U[i,:].dot(V[:,j]) - C[j] - mu)
-			B[i] = accum / (1 + reg) / len(ratings_by_i[i])
+					accum += (r - U[i,:].dot(V[:,int(j)]) - C[int(j)] - mu)
+				B[i] = accum / (1 + reg) / len(ratings_by_i[i])
 
 	  # update U
 	for i in xrange(M):
@@ -169,6 +201,7 @@ def matrix_fac():
 			accum = 0
 			for i, r in ratings_by_j[j]:
 				accum += (r - U[i,:].dot(V[:,j]) - B[i] - mu)
+			print(len(ratings_by_j[j]))
 			C[j] = accum / (1 + reg) / len(ratings_by_j[j])
 
 	  # update V
@@ -181,23 +214,25 @@ def matrix_fac():
 				vector += (r - B[i] - C[j] - mu)*U[i,:]
 			V[:,j] = np.linalg.solve(matrix, vector)
 	r_hat=U.dot(V)
-	#rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
-	"""
+	rmse=np.sqrt(np.mean(pow(r_hat-Q,2)))
+	
 	return r_hat
 def test():
 	#test_user_id = np.zeros(len(test))
 	#test_item_id = np.zeros(len(test))
+	test_data = list(testSet)
 	test_result = np.zeros(len(test_data))
 	test_pred = np.zeros(len(test_data))
 	r_hat = matrix_fac()
 	for i in range(len(test_data)):
-		test_data[i] = test_data[i].split(',')
-		test_data[i] = tuple(test_data[i][:-1])
-		test_user_id = int(user[test_data[i][0]])
-		test_item_id = int(item[test_data[i][1]])
+		#print(test_data[i][0])
+		test_user_id = test_data[i][0]
+		test_item_id = test_data[i][1]
 		test_result[i] = test_data[i][2]
 		#print test_result[i]
 		test_pred[i] = r_hat[test_user_id-1,test_item_id-1]
 	sq_error = np.mean((test_result - test_pred)**2)
 	print sq_error
+
+user,item,train_user_id,train_item_id,train_rating,testSet = dataProcessing()
 test()	
