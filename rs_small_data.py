@@ -157,7 +157,9 @@ def test():
 
 	for regCo in [0.1,0.5,1,1.5,2]:
 		print "regularization = ",regCo
-		facAndTest(5, regCo)
+		for K in [5,10,15]:
+			print "K feature",K
+			facAndTest(K, regCo)
 
 density = 10
 user,item,train_user_id,train_item_id,train_rating,testSet = dataProcessing()
