@@ -108,57 +108,6 @@ class collaborative_filter(object):
 
 
 
-
-	def matrix_fac(self, K):
-
-		#R matrix dimensions
-
-		M = len(self.ratings_by_i)
-		N = len(self.ratings_by_j)
-
-		mu=sum(self.train_rating)/len(self.train_rating)#average rating
-		reg=self.regCo/statistics.pvariance(self.train_rating,mu)#regularization coefficient
-
-		U = abs(np.random.randn(M, K) / K) #vertical
-		V = abs(np.random.randn(K, N) / K) #horizontal
-		#r_hat = np.zeros([M,N])
-		
-		#fill in R using ratings_by_i
-		R=np.zeros([M,N])
-		for i in self.ratings_by_i:
-			#i=int(i)
-			if self.ratings_by_i[i].shape[0]>0:
-				ind_movie=self.ratings_by_i[i][:,0]#\Omega_i
-				ind_rating=self.ratings_by_i[i][:,1]#corresponding ratings
-				#ind_movie=[int(ind_movie[j]) for j in range(ind_movie.shape[0])]
-				R[i,ind_movie]=ind_rating.ravel()
-
-		#Iteratively training
-		for t in range(100):
-			for i in range(M):
-				if len(self.ratings_by_i[i])>0:
-					#rate_ind=np.zeros(len(ratings_by_i[i]))
-					rate_ind=self.ratings_by_i[i][:,1]#R_{i,j} where j \in \Omega_i
-					#movie_ind=np.zeros(len(ratings_by_i[i]))
-					movie_ind=self.ratings_by_i[i][:,0]#\Omega_i
-					#movie_ind=[int(movie_ind[j]) for j in range(movie_ind.shape[0])]
-					U[i,:]=(np.linalg.inv(V[:,movie_ind].dot(V[:,movie_ind].T)+reg*np.eye(K)).dot(V[:,movie_ind].dot(rate_ind))).ravel()   
-			for j in range(N):
-				if len(self.ratings_by_j[j])>0:
-					#rate_ind=np.zeros(len(ratings_by_j[j]))
-					rate_ind=self.ratings_by_j[j][:,1]#R_{i,j} where i \in \Omega_j
-					#user_ind=np.zeros(len(ratings_by_j[j]))
-					user_ind=self.ratings_by_j[j][:,0]#\Omega_i
-					#user_ind=[int(user_ind[i]) for i in range(user_ind.shape[0])]
-					V[:,j]=(np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind)))).ravel()
-
-		r_hat=U.dot(V)
-		#Training error
-		error = np.mean(abs(R - r_hat))
-		print "Training error",error
-		return r_hat
-
-
 	def matrix_bias(self,K):
 		M = len(self.ratings_by_i)
 		N = len(self.ratings_by_j)
@@ -172,6 +121,7 @@ class collaborative_filter(object):
 		b_item = np.zeros(N)
 
 		R=np.zeros([M,N])
+
 		for i in self.ratings_by_i:
 			#i=int(i)
 			if self.ratings_by_i[i].shape[0]>0:
@@ -179,21 +129,22 @@ class collaborative_filter(object):
 				ind_rating=self.ratings_by_i[i][:,1]#corresponding ratings
 				#ind_movie=[int(ind_movie[j]) for j in range(ind_movie.shape[0])]
 				R[i,ind_movie]=ind_rating.ravel()
-
+				#print R[i,ind_movie]
+		#print R
 		for t in range(100):
 
 			# update user bias
 			for i in range(M):
-				if i in self.ratings_by_i:
+				if i in self.ratings_by_i and len(self.ratings_by_i[i])>0:
 					accum = 0
 					for j, r in self.ratings_by_i[i]:
 						accum += (r - U[i,:].dot(V[:,j]) - b_item[j] - mu)
-					if len(self.ratings_by_i[i])>0:
-						b_user[i] = accum / (1 + reg) / len(self.ratings_by_i[i])
+					b_user[i] = accum /  len(self.ratings_by_i[i])
+					#b_user[i] = accum / (1 + reg) / len(self.ratings_by_i[i])
 
 			# update U
 			for i in range(M):
-				if i in self.ratings_by_i:
+				if i in self.ratings_by_i and len(self.ratings_by_i[i])>0:
 					matrix = np.zeros((K, K)) + reg*np.eye(K)
 					vector = np.zeros(K)
 					for j, r in self.ratings_by_i[i]:
@@ -203,16 +154,16 @@ class collaborative_filter(object):
 
 			# update item bias
 			for j in range(N):
-				if j in self.ratings_by_j:
+				if j in self.ratings_by_j and len(self.ratings_by_j[j])>0:
 					accum = 0
 					for i, r in self.ratings_by_j[j]:
 						accum += (r - U[i,:].dot(V[:,j]) - b_user[i] - mu)
-					if len(self.ratings_by_j[j])>0:
-						b_item[j] = accum / (1 + reg) / len(self.ratings_by_j[j])
+					b_item[j] = accum /  len(self.ratings_by_j[j])
+					#b_item[j] = accum / (1 + reg) / len(self.ratings_by_j[j])
 
 			# update V
 			for j in range(N):
-				if j in self.ratings_by_j:
+				if j in self.ratings_by_j and len(self.ratings_by_j[j])>0:
 					matrix = np.zeros((K, K)) + reg*np.eye(K)
 					vector = np.zeros(K)
 					for i, r in self.ratings_by_j[j]:
@@ -221,11 +172,22 @@ class collaborative_filter(object):
 						V[:,j] = np.linalg.solve(matrix, vector)
 
 
-		r_hat=U.dot(V)
-		for i in range(r_hat.shape[0]):
-			for j in range(r_hat.shape[1]):
-				r_hat[i,j]+=b_user[i]+b_item[j]+mu
-		error = np.mean(abs(R - r_hat))
+
+		r_hat = np.zeros([M,N])
+		error = np.zeros([M,N])
+		for i in range(M):
+			for j in range(N):
+				#if R[i,j]>0:
+				r_hat[i,j] = U[i,:].dot(V[:,j])+b_user[i]+b_item[j]+mu
+				if R[i,j]>0:
+					error[i,j]=abs(R[i,j]-r_hat[i,j])
+
+				#print U[i,:].dot(V[:,j])
+		error = np.mean(error)
+		#print r_hat
+		#print b_user
+		#print r_hat
+		#print R-r_hat
 		print "Training error",error
 		return r_hat
 				
@@ -260,8 +222,8 @@ def main():
 	density = 10
 	path = os.getcwd()
 	file = path + '/ratings_Musical_Instruments.csv'
-	regCo = [0.5]
-	K = [15]
+	regCo = [1]
+	K = [5]
 	predict = collaborative_filter(regCo,K,file,density)
 	r_hat = predict.test(K,regCo)
 
