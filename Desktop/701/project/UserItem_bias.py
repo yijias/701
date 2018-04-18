@@ -86,7 +86,7 @@ class collaborative_filter_bias(object):
 
 				#print U[i,:].dot(V[:,j])
 		error = np.mean(error)
-		print "Training error",error
+		print "Training error with bias",error
 		return r_hat
 				
 
@@ -105,7 +105,7 @@ class collaborative_filter_bias(object):
 				test_result[i] = test_data[i][2]
 				test_pred[i] = r_hat[test_user_id,test_item_id]
 			error = np.mean(abs(test_result - test_pred))
-			print "Test error", error
+			print "Test error with bias", error
 		test_data = list(self.testSet)
 		test_result = np.zeros(len(test_data))
 		test_pred = np.zeros(len(test_data))

@@ -13,8 +13,10 @@ def main():
 	regCo = [1]
 	K = [5]
 	#predict = collaborative_filter(regCo,K,file,density)
-	predict = collaborative_filter_bias(regCo,K,file,density)
-	r_hat = predict.test(K,regCo)
+	predict_base = collaborative_filter(regCo,K,file,density)
+	r_hat_base = predict_base.test(K,regCo)
+	predict_withBias = collaborative_filter_bias(regCo,K,file,density)
+	r_hat_withBias = predict_withBias.test(K,regCo)
 
 	#test()	
 

@@ -70,7 +70,7 @@ class collaborative_filter(object):
 				#print U[i,:].dot(V[:,j])
 		error = np.mean(error)
 
-		print "Training error",error
+		print "Training error base line",error
 		return r_hat
 				
 	def test(self,K,regCo):
@@ -86,7 +86,7 @@ class collaborative_filter(object):
 				test_result[i] = test_data[i][2]
 				test_pred[i] = r_hat[test_user_id,test_item_id]
 			error = np.mean(abs(test_result - test_pred))
-			print "Test error", error
+			print "Test error base line", error
 		test_data = list(self.testSet)
 		test_result = np.zeros(len(test_data))
 		test_pred = np.zeros(len(test_data))
