@@ -188,7 +188,8 @@ class collaborative_filter(object):
 					accum = 0
 					for j, r in self.ratings_by_i[i]:
 						accum += (r - U[i,:].dot(V[:,j]) - b_item[j] - mu)
-					b_user[i] = accum / (1 + reg) / len(self.ratings_by_i[i])
+					if len(self.ratings_by_i[i])>0:
+						b_user[i] = accum / (1 + reg) / len(self.ratings_by_i[i])
 
 			# update U
 			for i in range(M):
@@ -206,7 +207,8 @@ class collaborative_filter(object):
 					accum = 0
 					for i, r in self.ratings_by_j[j]:
 						accum += (r - U[i,:].dot(V[:,j]) - b_user[i] - mu)
-					b_item[j] = accum / (1 + reg) / len(self.ratings_by_j[j])
+					if len(self.ratings_by_j[j])>0:
+						b_item[j] = accum / (1 + reg) / len(self.ratings_by_j[j])
 
 			# update V
 			for j in range(N):
@@ -258,7 +260,7 @@ def main():
 	density = 10
 	path = os.getcwd()
 	file = path + '/ratings_Musical_Instruments.csv'
-	regCo = [3]
+	regCo = [0.5]
 	K = [15]
 	predict = collaborative_filter(regCo,K,file,density)
 	r_hat = predict.test(K,regCo)
