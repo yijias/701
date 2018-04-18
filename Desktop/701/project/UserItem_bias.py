@@ -2,9 +2,9 @@ import os
 import numpy as np
 import random
 import statistics
-from rs_bias import preprocess
+from preprocess import preprocess
 
-class collaborative_filter(object):
+class collaborative_filter_bias(object):
 	def __init__(self,regCo,K,filepath,density):
 		self.regCo = regCo
 		self.prep_data = preprocess(filepath,density)
@@ -75,11 +75,17 @@ class collaborative_filter(object):
 						V[:,j] = np.linalg.solve(matrix, vector)
 
 
-		r_hat=U.dot(V)
-		for i in range(r_hat.shape[0]):
-			for j in range(r_hat.shape[1]):
-				r_hat[i,j]+=b_user[i]+b_item[j]+mu
-		error = np.mean(abs(R - r_hat))
+		r_hat = np.zeros([M,N])
+		error = np.zeros([M,N])
+		for i in range(M):
+			for j in range(N):
+				#if R[i,j]>0:
+				r_hat[i,j] = U[i,:].dot(V[:,j])+b_user[i]+b_item[j]+mu
+				if R[i,j]>0:
+					error[i,j]=abs(R[i,j]-r_hat[i,j])
+
+				#print U[i,:].dot(V[:,j])
+		error = np.mean(error)
 		print "Training error",error
 		return r_hat
 				
