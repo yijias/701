@@ -219,7 +219,7 @@ class collaborative_filter(object):
 						V[:,j] = np.linalg.solve(matrix, vector)
 
 
-		r_hat=U*V
+		r_hat=U.dot(V)
 		for i in range(r_hat.shape[0]):
 			for j in range(r_hat.shape[1]):
 				r_hat[i,j]+=b_user[i]+b_item[j]+mu
