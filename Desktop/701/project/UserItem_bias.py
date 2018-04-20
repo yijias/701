@@ -31,7 +31,6 @@ class collaborative_filter_bias(object):
 			if self.ratings_by_i[i].shape[0]>0:
 				ind_movie=self.ratings_by_i[i][:,0]#\Omega_i
 				ind_rating=self.ratings_by_i[i][:,1]#corresponding ratings
-				#ind_movie=[int(ind_movie[j]) for j in range(ind_movie.shape[0])]
 				R[i,ind_movie]=ind_rating.ravel()
 
 		for t in range(100):
@@ -79,24 +78,18 @@ class collaborative_filter_bias(object):
 		error = np.zeros([M,N])
 		for i in range(M):
 			for j in range(N):
-				#if R[i,j]>0:
 				r_hat[i,j] = U[i,:].dot(V[:,j])+b_user[i]+b_item[j]+mu
 				if R[i,j]>0:
 					error[i,j]=abs(R[i,j]-r_hat[i,j])
 
-				#print U[i,:].dot(V[:,j])
 		error = np.mean(error)
 		print "Training error with bias",error
 		return r_hat
-				
-
-
 
 	def test(self,K,regCo):
 		def facAndTest(K, regCo):
 			accuracy = 0
 			#matrix factorization and training
-			#r_hat = self.matrix_fac(K)
 			r_hat = self.matrix_bias(K)
 			#test error
 			for i in range(len(test_data)):
