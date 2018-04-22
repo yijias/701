@@ -25,11 +25,11 @@ class collaborative_filter(object):
 				R[i,ind_movie]=ind_rating.ravel()
 		return M,N,mu,R
 
-	def matrix_fac(self, K, regCo):
+	def matrix_fac(self, K, regCo, label):
 		M,N,mu,R = self.dataTrans()
 		reg=regCo/statistics.pvariance(self.train_rating,mu)#regularization coefficient
-		U = abs(np.random.randn(M, K) / K) #vertical
-		V = abs(np.random.randn(K, N) / K) #horizontal
+		U = (np.random.randn(M, K)/K) #vertical
+		V = (np.random.randn(K, N)/K) #horizontal
 		#Iteratively training
 		for t in range(100):
 			for i in range(M):
@@ -42,9 +42,8 @@ class collaborative_filter(object):
 					rate_ind=self.ratings_by_j[j][:,1]#R_{i,j} where i \in \Omega_j
 					user_ind=self.ratings_by_j[j][:,0]#\Omega_i
 					V[:,j]=(np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind)))).ravel()
-		print(U)
-		print(V)
 		r_hat = np.zeros([M,N])
+		#training error
 		error = np.zeros([M,N])
 		for i in range(M):
 			for j in range(N):
@@ -52,14 +51,14 @@ class collaborative_filter(object):
 				if R[i,j]>0:
 					error[i,j]=abs(R[i,j]-r_hat[i,j])
 		error = np.mean(error)
-		print "Training error base line",error
+		print("Training error %s" %label,error)
 		return r_hat
 				
-	def test(self,K,regCo):
+	def test(self,K,regCo, label):
 		def facAndTest(K, regCo):
 			accuracy = 0
 			#matrix factorization and training
-			r_hat = self.matrix_fac(K,regCo)
+			r_hat = self.matrix_fac(K,regCo,label)
 			#test error
 			for i in range(len(test_data)):
 				test_user_id = test_data[i][0]
@@ -67,7 +66,7 @@ class collaborative_filter(object):
 				test_result[i] = test_data[i][2]
 				test_pred[i] = r_hat[test_user_id,test_item_id]
 			error = np.mean(abs(test_result - test_pred))
-			print "Test error base line", error
+			print("Testing error %s" %label,error)
 
 		test_data = list(self.testSet)
 		test_result = np.zeros(len(test_data))
