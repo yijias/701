@@ -27,8 +27,8 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
         U = (np.random.randn(M, K)) #vertical
         V = (np.random.randn(K, N)) #horizontal
         r_hat = self.logistic(U.dot(V),M,N) 
-        #print(R.shape, r_hat.shape)
-        sigma = self.calSigma(R,r_hat,1)
+
+        sigma = self.calSigma(R,r_hat,c=0)
         sigma_U = statistics.pvariance(np.ravel(U)) #user variance
         sigma_V = statistics.pvariance(np.ravel(V)) #item variance
         print(sigma, sigma_U, sigma_V)
@@ -47,7 +47,7 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
                     V[:,j]=(np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+regCo*(sigma/sigma_V)*np.eye(K)).dot(U[user_ind,:].T.dot(rate_ind))).ravel()
             
             r_hat = self.logistic(U.dot(V),M,N)
-            sigma = self.calSigma(R,r_hat,1)
+            sigma = self.calSigma(R,r_hat,c=0)
             sigma_U = statistics.pvariance(np.ravel(U)) #user variance
             sigma_V = statistics.pvariance(np.ravel(V)) #item variance
             print(sigma, sigma_U, sigma_V)
@@ -63,4 +63,3 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
         return r_hat
 
 
-        
