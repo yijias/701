@@ -55,8 +55,7 @@ class collaborative_filter_bias(collaborative_filter):
                         matrix += np.outer(U[i,:], U[i,:])
                         vector += (r - b_user[i] - b_item[j] - mu)*U[i,:]
                         V[:,j] = np.linalg.solve(matrix, vector)
-
-        r_hat = U.dot(V)
+        r_hat = U.dot(V) + np.tile(b_user,(N,1)).T + np.tile(b_item,(M,1)) + mu
         return U,V,b_user,b_item,r_hat
 
     def test(self,K,regCos,label, iters=10, step = 10):
