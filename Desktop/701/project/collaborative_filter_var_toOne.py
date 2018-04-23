@@ -31,8 +31,15 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
         M,N = R.shape
         r_hat = self.logistic(U.dot(V),M,N) 
         sigma = self.calSigma(R,r_hat,c=0)
-        sigma_U = statistics.pvariance(np.ravel(U)) #user variance
-        sigma_V = statistics.pvariance(np.ravel(V)) #item variance
+        sigma_U = np.var(np.ravel(U)) #user variance
+        sigma_V = np.var(np.ravel(V)) #item variance
+        '''
+        u,v = np.ravel(U),np.ravel(V)
+        mu_u,mu_v = np.sum(u)/len(u),np.sum(v)/len(v)
+        u,v = u-mu_u,v-mu_v
+        sigma_U = np.mean(u.dot(u))
+        sigma_V = np.mean(v.dot(v))
+        '''
         return sigma, sigma_U, sigma_V    
 
     def matrix_fac(self, K,step,M,N, U,V,R,sigma,sigma_U,sigma_V):
@@ -55,7 +62,7 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
 
         return U,V,r_hat,sigma,sigma_U,sigma_V
 
-    def test(self,K,regCos,label, iters=20, step = 3):
+    def test(self,K,regCos,label, iters=2, step = 3):
         def facAndTest(k, regCo):
             #matrix factorization and training
             M,N,mu,R_ori = self.dataTrans()
@@ -64,18 +71,14 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
             sigma, sigma_U, sigma_V = self.sigmas(U,V,R)
             for i in range(1,iters):
                 U,V,r_hat,sigma,sigma_U,sigma_V= self.matrix_fac(k,step,M,N,U,V,R,sigma,sigma_U,sigma_V)
-                zipped = np.dstack((R_ori,r_hat))
-                train_error = [[abs(r1-r2) if r1>=1 else 0 for (r1,r2) in zipped[j]] for j in range(M)]
-                train_error = np.mean(train_error)
+                train_error = self.trainError(R_ori,r_hat)
                 print("%s step training error %s" %(i*step,label),train_error)
-                test_pred = r_hat[IDpairs[0],IDpairs[1]].ravel()
-                test_error = np.mean(abs(test_result - test_pred))
+                test_error = self.testError(r_hat, IDpairs, trueValues)
                 print("%s step testing error %s" %(i*step,label),test_error)
 
         test_data = np.array(list(self.testSet))
-        test_result = test_data[:,-1].ravel()
+        trueValues = test_data[:,-1].ravel()
         IDpairs = (test_data[:,:-1].T).astype(int)
-        print(IDpairs)
         for regCo in regCos:
             for k in K:
                 print "regularization = ",regCo

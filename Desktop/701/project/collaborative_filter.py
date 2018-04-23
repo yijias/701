@@ -48,28 +48,36 @@ class collaborative_filter(object):
 					V[:,j]=(np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind)))).ravel()
 		r_hat = U.dot(V)
 		return U,V,r_hat
-				
-	def test(self,K,regCos,label, iters=20, step = 3):
+
+	def trainError(self,R,r_hat):
+		M = R.shape[0]
+		zipped = np.dstack((R,r_hat))
+		train_error = [[abs(r1-r2) if r1>=1 else 0 for (r1,r2) in zipped[j]] for j in range(M)]
+		train_error = np.mean(train_error)
+		return train_error
+		
+	def testError(self,r_hat,IDpairs, trueValues):	
+		test_pred = r_hat[IDpairs[0],IDpairs[1]].ravel()
+		test_error = np.mean(abs(trueValues - test_pred))
+		return test_error
+		
+	def test(self,K,regCos,label, iters=20, step = 5):
 		def facAndTest(k, regCo):
 			#matrix factorization and training
 			M,N,mu,R = self.dataTrans()
 			U,V = self.initiate(M,N,k)
 			reg = self.calReg(regCo,mu)
 			for i in range(1,iters):
-				U_new,V_new,r_hat = self.matrix_fac(U,V,M,N,k,reg,step)
-				U,V = U_new, V_new
-				zipped = np.dstack((R,r_hat))
-				train_error = [[abs(r1-r2) if r1>=1 else 0 for (r1,r2) in zipped[j]] for j in range(M)]
-				train_error = np.mean(train_error)
+				U,V,r_hat = self.matrix_fac(U,V,M,N,k,reg,step)
+				train_error = self.trainError(R,r_hat)
 				print("%s step training error %s" %(i*step,label),train_error)
-				test_pred = r_hat[IDpairs[0],IDpairs[1]].ravel()
-				test_error = np.mean(abs(test_result - test_pred))
+				test_error = self.testError(r_hat,IDpairs, trueValues)
 				print("%s step testing error %s" %(i*step,label),test_error)
 
+
 		test_data = np.array(list(self.testSet))
-		test_result = test_data[:,-1].ravel()
+		trueValues = test_data[:,-1].ravel()
 		IDpairs = (test_data[:,:-1].T).astype(int)
-		print(IDpairs)
 		for regCo in regCos:
 			for k in K:
 				print "regularization = ",regCo
