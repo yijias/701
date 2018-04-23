@@ -19,8 +19,8 @@ def main():
 	user,item,train_user_id,train_item_id,train_rating,testSet = data.dataProcessing()
 	ratings_by_i, ratings_by_j = data.create_rating_list()
 
-	predict_base = collaborative_filter(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
-	r_hat_base = predict_base.test(K,regCo,'base line')
+	#predict_base = collaborative_filter(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
+	#r_hat_base = predict_base.test(K,regCo,'base line')
 
 	predict_withBias = collaborative_filter_bias(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
 	r_hat_withBias = predict_withBias.test(K,regCo,'with bias')
@@ -28,7 +28,7 @@ def main():
 	#predict_var = collaborative_filter_var(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
 	#r_hat_var = predict_var.test(K,regCo,'var')
 
-	predict_var_toOne = collaborative_filter_var_toOne(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
-	r_hat_var_toOne = predict_var_toOne.test(K,regCo,'var_toOne')
+	#predict_var_toOne = collaborative_filter_var_toOne(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
+	#r_hat_var_toOne = predict_var_toOne.test(K,regCo,'var_toOne')
 if __name__ == '__main__':
 	main()

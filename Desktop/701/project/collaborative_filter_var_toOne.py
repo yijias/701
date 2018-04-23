@@ -52,7 +52,8 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
             sigma_V = statistics.pvariance(np.ravel(V)) #item variance
             print(sigma, sigma_U, sigma_V)
 
-        r_hat = self.logistic(U.dot(V),M,N)*4+1 #map it back to [1,5]
+        sample = np.random.randn(M,N)
+        r_hat = (self.logistic(U.dot(V),M,N)+sample*np.sqrt(sigma))*4+1 #map it back to [1,5]
 
         #training error; using R_ori
         zipped = np.dstack((R_ori,r_hat))

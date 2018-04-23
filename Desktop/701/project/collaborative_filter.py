@@ -13,7 +13,6 @@ class collaborative_filter(object):
 		#R matrix dimensions
 		M = len(self.ratings_by_i)
 		N = len(self.ratings_by_j)
-
 		mu=sum(self.train_rating)/len(self.train_rating)#average rating
 		
 		#fill in R using ratings_by_i
@@ -25,13 +24,18 @@ class collaborative_filter(object):
 				R[i,ind_movie]=ind_rating.ravel()
 		return M,N,mu,R
 
-	def matrix_fac(self, K, regCo, label):
-		M,N,mu,R = self.dataTrans()
-		reg=regCo/statistics.pvariance(self.train_rating,mu)#regularization coefficient
+	def initiate(self, M,N,K):
 		U = (np.random.randn(M, K)/K) #vertical
 		V = (np.random.randn(K, N)/K) #horizontal
+		return U,V
+
+	def calReg(self,regCo,mu):
+		reg=regCo/statistics.pvariance(self.train_rating,mu)
+		return reg
+
+	def matrix_fac(self,U,V,M,N, K, reg,step):
 		#Iteratively training
-		for t in range(20):
+		for t in range(step):
 			for i in range(M):
 				if len(self.ratings_by_i[i])>0:
 					rate_ind=self.ratings_by_i[i][:,1]#R_{i,j} where j \in \Omega_i
@@ -42,40 +46,34 @@ class collaborative_filter(object):
 					rate_ind=self.ratings_by_j[j][:,1]#R_{i,j} where i \in \Omega_j
 					user_ind=self.ratings_by_j[j][:,0]#\Omega_i
 					V[:,j]=(np.linalg.inv(U[user_ind,:].T.dot(U[user_ind,:])+reg*np.eye(K)).dot((U[user_ind,:].T.dot(rate_ind)))).ravel()
-		r_hat = np.zeros([M,N])
-		#training error
-		error = np.zeros([M,N])
-		for i in range(M):
-			for j in range(N):
-				r_hat[i,j] = U[i,:].dot(V[:,j])
-				if R[i,j]>0:
-					error[i,j]=abs(R[i,j]-r_hat[i,j])
-		error = np.mean(error)
-		print("Training error %s" %label,error)
-		return r_hat
+		r_hat = U.dot(V)
+		return U,V,r_hat
 				
-	def test(self,K,regCo, label):
-		def facAndTest(K, regCo):
-			accuracy = 0
+	def test(self,K,regCos,label, iters=20, step = 3):
+		def facAndTest(k, regCo):
 			#matrix factorization and training
-			r_hat = self.matrix_fac(K,regCo,label)
-			#test error
-			for i in range(len(test_data)):
-				test_user_id = test_data[i][0]
-				test_item_id = test_data[i][1]
-				test_result[i] = test_data[i][2]
-				test_pred[i] = r_hat[test_user_id,test_item_id]
-			error = np.mean(abs(test_result - test_pred))
-			print("Testing error %s" %label,error)
+			M,N,mu,R = self.dataTrans()
+			U,V = self.initiate(M,N,k)
+			reg = self.calReg(regCo,mu)
+			for i in range(1,iters):
+				U_new,V_new,r_hat = self.matrix_fac(U,V,M,N,k,reg,step)
+				U,V = U_new, V_new
+				zipped = np.dstack((R,r_hat))
+				train_error = [[abs(r1-r2) if r1>=1 else 0 for (r1,r2) in zipped[j]] for j in range(M)]
+				train_error = np.mean(train_error)
+				print("%s step training error %s" %(i*step,label),train_error)
+				test_pred = r_hat[IDpairs[0],IDpairs[1]].ravel()
+				test_error = np.mean(abs(test_result - test_pred))
+				print("%s step testing error %s" %(i*step,label),test_error)
 
-		test_data = list(self.testSet)
-		test_result = np.zeros(len(test_data))
-		test_pred = np.zeros(len(test_data))
-		for Lambda in regCo:
+		test_data = np.array(list(self.testSet))
+		test_result = test_data[:,-1].ravel()
+		IDpairs = (test_data[:,:-1].T).astype(int)
+		print(IDpairs)
+		for regCo in regCos:
 			for k in K:
-				print "regularization = ",Lambda
+				print "regularization = ",regCo
 				print "K feature",k
-				error = facAndTest(k, Lambda)
-		return error
+				facAndTest(k, regCo)
 
 
