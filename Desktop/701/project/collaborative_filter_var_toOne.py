@@ -33,7 +33,7 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
         sigma_V = statistics.pvariance(np.ravel(V)) #item variance
         print(sigma, sigma_U, sigma_V)
         #Iteratively training
-        for t in range(20):
+        for t in range(5):
             print(t)
             for i in range(M):
                 if len(self.ratings_by_i[i])>0:

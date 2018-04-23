@@ -31,7 +31,7 @@ class collaborative_filter(object):
 		U = (np.random.randn(M, K)/K) #vertical
 		V = (np.random.randn(K, N)/K) #horizontal
 		#Iteratively training
-		for t in range(100):
+		for t in range(20):
 			for i in range(M):
 				if len(self.ratings_by_i[i])>0:
 					rate_ind=self.ratings_by_i[i][:,1]#R_{i,j} where j \in \Omega_i

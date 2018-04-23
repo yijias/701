@@ -15,7 +15,7 @@ class collaborative_filter_bias(collaborative_filter):
         V = (np.random.randn(K, N)/K) #horizontal
         b_user = np.zeros(M)
         b_item = np.zeros(N)
-        for t in range(100):
+        for t in range(20):
 
             # update user bias
             for i in range(M):
