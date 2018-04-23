@@ -8,15 +8,16 @@ from collaborative_filter import collaborative_filter
 class collaborative_filter_bias(collaborative_filter):
     def __init__(self,user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j):
         collaborative_filter.__init__(self,user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
-    def matrix_fac(self, K, regCo, label):
-        M,N,mu,R = self.dataTrans()
-        reg=regCo/statistics.pvariance(self.train_rating,mu)
+    
+    def initiate(self, M,N,K):
         U = (np.random.randn(M, K)/K) #vertical
         V = (np.random.randn(K, N)/K) #horizontal
         b_user = np.zeros(M)
-        b_item = np.zeros(N)
-        for t in range(20):
+        b_item = np.zeros(N)       
+        return U,V,b_user,b_item 
 
+    def matrix_fac(self,U,V,M,N,b_user,b_item,mu, K,reg,step):
+        for t in range(step):
             # update user bias
             for i in range(M):
                 if i in self.ratings_by_i:
@@ -54,18 +55,32 @@ class collaborative_filter_bias(collaborative_filter):
                         matrix += np.outer(U[i,:], U[i,:])
                         vector += (r - b_user[i] - b_item[j] - mu)*U[i,:]
                         V[:,j] = np.linalg.solve(matrix, vector)
-        r_hat = np.zeros([M,N])
-        #training error
-        error = np.zeros([M,N])
-        for i in range(M):
-            for j in range(N):
-                r_hat[i,j] = U[i,:].dot(V[:,j])+b_user[i]+b_item[j]+mu
-                if R[i,j]>0:
-                    error[i,j]=abs(R[i,j]-r_hat[i,j])
+        r_hat = U.dot(V) + np.tile(b_user,(N,1)).T + np.tile(b_item,(M,1)) + mu
+        return U,V,b_user,b_item,r_hat
 
-        error = np.mean(error)
-        print("Training error %s" %label,error)
-        return r_hat
+    def test(self,K,regCos,label, iters=10, step = 10):
+        def facAndTest(k, regCo):
+            #matrix factorization and training
+            M,N,mu,R = self.dataTrans()
+            U,V,b_user,b_item = self.initiate(M,N,k)
+            reg = self.calReg(regCo,mu)
+            print(reg)
+            for i in range(1,iters):
+                U,V,b_user,b_item,r_hat = self.matrix_fac(U,V,M,N,b_user,b_item,mu, k,reg,step)
+                train_error = self.trainError(R,r_hat)
+                print("%s step training error %s" %(i*step,label),train_error)
+                test_error = self.testError(r_hat,IDpairs, trueValues)
+                print("%s step testing error %s" %(i*step,label),test_error)
+
+        test_data = np.array(list(self.testSet))
+        trueValues = test_data[:,-1].ravel()
+        IDpairs = (test_data[:,:-1].T).astype(int)
+        print(IDpairs)
+        for regCo in regCos:
+            for k in K:
+                print "regularization = ",regCo
+                print "K feature",k
+                facAndTest(k, regCo)
 
 
 
