@@ -60,28 +60,35 @@ class collaborative_filter(object):
 		test_pred = r_hat[IDpairs[0],IDpairs[1]].ravel()
 		test_error = np.mean(abs(trueValues - test_pred))
 		return test_error
-		
-	def test(self,K,regCos,label, iters=20, step = 5):
-		def facAndTest(k, regCo):
-			#matrix factorization and training
-			M,N,mu,R = self.dataTrans()
-			U,V = self.initiate(M,N,k)
-			reg = self.calReg(regCo,mu)
-			for i in range(1,iters):
-				U,V,r_hat = self.matrix_fac(U,V,M,N,k,reg,step)
-				train_error = self.trainError(R,r_hat)
-				print("%s step training error %s" %(i*step,label),train_error)
-				test_error = self.testError(r_hat,IDpairs, trueValues)
-				print("%s step testing error %s" %(i*step,label),test_error)
 
+	def facAndTest(self, k, regCo, iters, step, trueValues, IDpairs, label):
+		#matrix factorization and training
+		M,N,mu,R = self.dataTrans()
+		U,V = self.initiate(M,N,k)
+		reg = self.calReg(regCo,mu)
 
-		test_data = np.array(list(self.testSet))
-		trueValues = test_data[:,-1].ravel()
-		IDpairs = (test_data[:,:-1].T).astype(int)
-		for regCo in regCos:
-			for k in K:
-				print "regularization = ",regCo
-				print "K feature",k
-				facAndTest(k, regCo)
+		train = list(); test = list()
+		for i in range(1,iters):
+			U,V,r_hat = self.matrix_fac(U,V,M,N,k,reg,step)
+			train_error = self.trainError(R,r_hat)
+			print("%s step training error %s" %(i*step,label),train_error)
+			train.append([i*step, train_error])
+			test_error = self.testError(r_hat,IDpairs, trueValues)
+			print("%s step testing error %s" %(i*step,label),test_error)
+			test.append([i*step, test_error])
+		return train, test	
+
+	def test(self,K,regCos,label, iters=4, step = 3):
+	    test_data = np.array(list(self.testSet))
+	    trueValues = test_data[:,-1].ravel()
+	    IDpairs = (test_data[:,:-1].T).astype(int)
+	    TRAIN = dict(); TEST = dict()
+	    for regCo in regCos:
+	        TRAIN[regCo] = dict(); TEST[regCo] = dict()
+	        for k in K:
+	            print "regularization = ",regCo
+	            print "K feature",k
+	            TRAIN[regCo][k], TEST[regCo][k] = self.facAndTest(k, regCo, iters, step, trueValues, IDpairs, label)
+	    return TRAIN, TEST
 
 

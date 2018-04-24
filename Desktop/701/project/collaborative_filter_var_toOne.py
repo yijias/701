@@ -4,10 +4,10 @@ import random
 import statistics
 import copy
 from preprocess import preprocess
-from collaborative_filter_var import collaborative_filter_var
-class collaborative_filter_var_toOne(collaborative_filter_var):
+from collaborative_filter import collaborative_filter
+class collaborative_filter_var_toOne(collaborative_filter):
     def __init__(self,user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j):
-        collaborative_filter_var.__init__(self,user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
+        collaborative_filter.__init__(self,user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
     
     def calSigma(self,R,r_hat,c=1):
         M = R.shape[0]
@@ -25,7 +25,8 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
     def logistic(self,r,M,N):
         for i in range(M):
             for j in range(N):
-                r[i,j] = 1/(1+np.exp(-r[i,j]))
+                r[i,j] = (np.arctan(0.3*r[i,j])+1)/2
+                #r[i,j] = 1/(1+np.exp(-0.3*r[i,j]))
         return r
     def sigmas(self, U,V,R):
         M,N = R.shape
@@ -33,13 +34,6 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
         sigma = self.calSigma(R,r_hat,c=0)
         sigma_U = np.var(np.ravel(U)) #user variance
         sigma_V = np.var(np.ravel(V)) #item variance
-        '''
-        u,v = np.ravel(U),np.ravel(V)
-        mu_u,mu_v = np.sum(u)/len(u),np.sum(v)/len(v)
-        u,v = u-mu_u,v-mu_v
-        sigma_U = np.mean(u.dot(u))
-        sigma_V = np.mean(v.dot(v))
-        '''
         return sigma, sigma_U, sigma_V    
 
     def matrix_fac(self, K,step,M,N, U,V,R,sigma,sigma_U,sigma_V):
@@ -62,26 +56,21 @@ class collaborative_filter_var_toOne(collaborative_filter_var):
 
         return U,V,r_hat,sigma,sigma_U,sigma_V
 
-    def test(self,K,regCos,label, iters=2, step = 3):
-        def facAndTest(k, regCo):
-            #matrix factorization and training
-            M,N,mu,R_ori = self.dataTrans()
-            R = self.mapToOne(R_ori,M,N) #map R_ori to R -- [1,5] to [0,1]; R will be used throughout training
-            U,V = self.initiate(M,N,k)
-            sigma, sigma_U, sigma_V = self.sigmas(U,V,R)
-            for i in range(1,iters):
-                U,V,r_hat,sigma,sigma_U,sigma_V= self.matrix_fac(k,step,M,N,U,V,R,sigma,sigma_U,sigma_V)
-                train_error = self.trainError(R_ori,r_hat)
-                print("%s step training error %s" %(i*step,label),train_error)
-                test_error = self.testError(r_hat, IDpairs, trueValues)
-                print("%s step testing error %s" %(i*step,label),test_error)
-
-        test_data = np.array(list(self.testSet))
-        trueValues = test_data[:,-1].ravel()
-        IDpairs = (test_data[:,:-1].T).astype(int)
-        for regCo in regCos:
-            for k in K:
-                print "regularization = ",regCo
-                print "K feature",k
-                facAndTest(k, regCo)
+    def facAndTest(self, k, regCo, iters, step, trueValues, IDpairs,label):
+        #matrix factorization and training
+        M,N,mu,R_ori = self.dataTrans()
+        R = self.mapToOne(R_ori,M,N) #map R_ori to R -- [1,5] to [0,1]; R will be used throughout training
+        U,V = self.initiate(M,N,k)
+        sigma, sigma_U, sigma_V = self.sigmas(U,V,R)
+        
+        train = list(); test = list() 
+        for i in range(1,iters):
+            U,V,r_hat,sigma,sigma_U,sigma_V= self.matrix_fac(k,step,M,N,U,V,R,sigma,sigma_U,sigma_V)
+            train_error = self.trainError(R_ori,r_hat)
+            print("%s step training error %s" %(i*step,label),train_error)
+            train.append([i*step, train_error])
+            test_error = self.testError(r_hat,IDpairs, trueValues)
+            print("%s step testing error %s" %(i*step,label),test_error)
+            test.append([i*step, test_error])
+        return train, test
 

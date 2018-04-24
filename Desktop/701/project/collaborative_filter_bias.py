@@ -58,29 +58,23 @@ class collaborative_filter_bias(collaborative_filter):
         r_hat = U.dot(V) + np.tile(b_user,(N,1)).T + np.tile(b_item,(M,1)) + mu
         return U,V,b_user,b_item,r_hat
 
-    def test(self,K,regCos,label, iters=10, step = 10):
-        def facAndTest(k, regCo):
-            #matrix factorization and training
-            M,N,mu,R = self.dataTrans()
-            U,V,b_user,b_item = self.initiate(M,N,k)
-            reg = self.calReg(regCo,mu)
-            print(reg)
-            for i in range(1,iters):
-                U,V,b_user,b_item,r_hat = self.matrix_fac(U,V,M,N,b_user,b_item,mu, k,reg,step)
-                train_error = self.trainError(R,r_hat)
-                print("%s step training error %s" %(i*step,label),train_error)
-                test_error = self.testError(r_hat,IDpairs, trueValues)
-                print("%s step testing error %s" %(i*step,label),test_error)
+    def facAndTest(self, k, regCo, iters, step, trueValues, IDpairs,label):
+        #matrix factorization and training
+        M,N,mu,R = self.dataTrans()
+        U,V,b_user,b_item = self.initiate(M,N,k)
+        reg = self.calReg(regCo,mu)
 
-        test_data = np.array(list(self.testSet))
-        trueValues = test_data[:,-1].ravel()
-        IDpairs = (test_data[:,:-1].T).astype(int)
-        print(IDpairs)
-        for regCo in regCos:
-            for k in K:
-                print "regularization = ",regCo
-                print "K feature",k
-                facAndTest(k, regCo)
+        train = list(); test = list()
+        for i in range(1,iters):
+            U,V,b_user,b_item,r_hat = self.matrix_fac(U,V,M,N,b_user,b_item,mu, k,reg,step)
+            train_error = self.trainError(R,r_hat)
+            print("%s step training error %s" %(i*step,label),train_error)
+            train.append([i*step, train_error])
+            test_error = self.testError(r_hat,IDpairs, trueValues)
+            print("%s step testing error %s" %(i*step,label),test_error)
+            test.append([i*step, test_error])
+        return train, test
+
 
 
 
