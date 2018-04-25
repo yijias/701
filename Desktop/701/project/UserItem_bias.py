@@ -5,13 +5,13 @@ import statistics
 from preprocess import preprocess
 
 class collaborative_filter_bias(object):
-	def __init__(self,regCo,K,filepath,density):
+	def __init__(self,regCo,K,filepath,density,lr = 0.007):
 		self.regCo = regCo
 		self.prep_data = preprocess(filepath,density)
 
 		self.user,self.item,self.train_user_id,self.train_item_id,self.train_rating,self.testSet,self.trainSet = self.prep_data.dataProcessing()
 		self.ratings_by_i,self.ratings_by_j = self.prep_data.create_rating_list()
-
+		self.lr = lr
 
 	def matrix_bias(self,K):
 		M = len(self.ratings_by_i)
@@ -35,7 +35,18 @@ class collaborative_filter_bias(object):
 				R[i,ind_movie]=ind_rating.ravel()
 
 		for t in range(100):
+			for u,i,r in self.trainSet:
+				u = int(u)
+				i = int(i)
+				rp = b_user[u] + b_item[i] + U[u,:].dot(V[:,i]) + mu
+				e_ui = R[u,i] - rp
 
+				b_item[i] += self.lr*(e_ui - reg * b_item[i])
+				V[:,i] += self.lr*(e_ui * U[u,:] - reg*V[:,i])
+				b_user[u] += self.lr*(e_ui - reg * b_user[u])
+				U[u,:] += self.lr*(e_ui*V[:,i] - reg* U[u,:])
+			print "processing epoch {}".format(t),e_ui
+		'''
 			# update user bias
 			for i in range(M):
 				if i in self.ratings_by_i:
@@ -74,7 +85,7 @@ class collaborative_filter_bias(object):
 						vector += (r - b_user[i] - b_item[j] - mu)*U[i,:]
 						V[:,j] = np.linalg.solve(matrix, vector)
 
-
+		'''
 		r_hat = np.zeros([M,N])
 		error = np.zeros([M,N])
 		for i in range(M):
@@ -85,7 +96,7 @@ class collaborative_filter_bias(object):
 					error[i,j]=abs(R[i,j]-r_hat[i,j])
 
 				#print U[i,:].dot(V[:,j])
-		error = np.mean(error)
+		error = np.sqrt(np.mean(error**2))
 		print "Training error with bias",error
 		return r_hat
 				
@@ -104,7 +115,7 @@ class collaborative_filter_bias(object):
 				test_item_id = test_data[i][1]
 				test_result[i] = test_data[i][2]
 				test_pred[i] = r_hat[test_user_id,test_item_id]
-			error = np.mean(abs(test_result - test_pred))
+			error = np.sqrt(np.mean((test_result - test_pred)**2))
 			print "Test error with bias", error
 		test_data = list(self.testSet)
 		test_result = np.zeros(len(test_data))

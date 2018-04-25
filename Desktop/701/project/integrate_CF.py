@@ -37,7 +37,7 @@ class integrated_model_CF(object):
 				#ind_movie=[int(ind_movie[j]) for j in range(ind_movie.shape[0])]
 				R[i,ind_movie]=ind_rating.ravel()
 		print "finish fill in rating matrix"
-		for t in range(100):
+		for t in range(50):
 			for u, i, r in self.trainSet:
 				#print u,i,r
 				Nu = self.ratings_by_i[int(u)]
@@ -74,7 +74,7 @@ class integrated_model_CF(object):
 					error[i,j]=abs(R[i,j]-r_hat[i,j])
 
 				#print U[i,:].dot(V[:,j])
-		error = np.mean(error)
+		error = np.sqrt(np.mean(error**2))
 		print "Training error with bias",error
 		return r_hat
 				
@@ -93,7 +93,7 @@ class integrated_model_CF(object):
 				test_item_id = test_data[i][1]
 				test_result[i] = test_data[i][2]
 				test_pred[i] = r_hat[test_user_id,test_item_id]
-			error = np.sqrt(np.mean((abs(test_result - test_pred))**2))
+			error = np.sqrt(np.mean((test_result - test_pred)**2))
 			print "Test error with bias", error
 		test_data = list(self.testSet)
 		test_result = np.zeros(len(test_data))

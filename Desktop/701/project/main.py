@@ -16,11 +16,11 @@ def main():
 	#predict = collaborative_filter(regCo,K,file,density)
 	#predict_base = collaborative_filter(regCo,K,file,density)
 	#r_hat_base = predict_base.test(K,regCo)
-	#predict_withBias = collaborative_filter_bias(regCo,K,file,density)
-	#r_hat_withBias = predict_withBias.test(K,regCo)
+	predict_withBias = collaborative_filter_bias(regCo,K,file,density)
+	r_hat_withBias = predict_withBias.test(K,regCo)
 
-	integrate_model = integrated_model_CF(regCo,K,file,density)
-	r_hat_imp = integrate_model.test(K,regCo)
+	#integrate_model = integrated_model_CF(regCo,K,file,density)
+	#r_hat_imp = integrate_model.test(K,regCo)
 	#test()	
 
 if __name__ == '__main__':
