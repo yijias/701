@@ -76,10 +76,10 @@ class preprocess(object):
 		train_user_id = trainList[:,0]# I-pos no of users in training data with duplicated entries
 		train_item_id = trainList[:,1]# J-pos no of items in training data with duplicated entries
 		train_rating = trainList[:,2]# corresponding ratings
-		return user,item,train_user_id,train_item_id,train_rating,testSet
+		return user,item,train_user_id,train_item_id,train_rating,testSet,trainList
 
 	def create_rating_list(self):
-		user,item,train_user_id,train_item_id,train_rating,testSet=self.dataProcessing()
+		user,item,train_user_id,train_item_id,train_rating,testSet,trainSet=self.dataProcessing()
 		#### creating dictionary {user i: array[item j, rating r]}.
 		ratings_by_i=dict()
 		#### creating dictionary {item j: array[user i, rating r]}.

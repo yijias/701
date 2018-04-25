@@ -9,7 +9,7 @@ class collaborative_filter_bias(object):
 		self.regCo = regCo
 		self.prep_data = preprocess(filepath,density)
 
-		self.user,self.item,self.train_user_id,self.train_item_id,self.train_rating,self.testSet = self.prep_data.dataProcessing()
+		self.user,self.item,self.train_user_id,self.train_item_id,self.train_rating,self.testSet,self.trainSet = self.prep_data.dataProcessing()
 		self.ratings_by_i,self.ratings_by_j = self.prep_data.create_rating_list()
 
 
