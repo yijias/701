@@ -2,6 +2,7 @@ import os
 import numpy as np
 import random
 import statistics
+import time
 from preprocess import preprocess
 from collaborative_filter import collaborative_filter
 
@@ -65,14 +66,15 @@ class collaborative_filter_bias(collaborative_filter):
         reg = self.calReg(regCo,mu)
 
         train = list(); test = list()
+        t0=time.time()
         for i in range(1,iters):
             U,V,b_user,b_item,r_hat = self.matrix_fac(U,V,M,N,b_user,b_item,mu, k,reg,step)
             train_error = self.trainError(R,r_hat)
             print("%s step training error %s" %(i*step,label),train_error)
-            train.append([i*step, train_error])
+            train.append([time.time()-t0, train_error])
             test_error = self.testError(r_hat,IDpairs, trueValues)
             print("%s step testing error %s" %(i*step,label),test_error)
-            test.append([i*step, test_error])
+            test.append([time.time()-t0, test_error])
         return train, test
 
 

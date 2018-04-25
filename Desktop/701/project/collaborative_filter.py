@@ -2,6 +2,7 @@ import os
 import numpy as np
 import random
 import statistics
+import time
 from preprocess import preprocess
 
 class collaborative_filter(object):
@@ -52,13 +53,13 @@ class collaborative_filter(object):
 	def trainError(self,R,r_hat):
 		M = R.shape[0]
 		zipped = np.dstack((R,r_hat))
-		train_error = [[abs(r1-r2) if r1>=1 else 0 for (r1,r2) in zipped[j]] for j in range(M)]
+		train_error = [[np.square(r1-r2) if r1>=1 else 0 for (r1,r2) in zipped[j]] for j in range(M)]
 		train_error = np.mean(train_error)
 		return train_error
 		
 	def testError(self,r_hat,IDpairs, trueValues):	
 		test_pred = r_hat[IDpairs[0],IDpairs[1]].ravel()
-		test_error = np.mean(abs(trueValues - test_pred))
+		test_error = np.mean(np.square(trueValues - test_pred))
 		return test_error
 
 	def facAndTest(self, k, regCo, iters, step, trueValues, IDpairs, label):
@@ -68,14 +69,15 @@ class collaborative_filter(object):
 		reg = self.calReg(regCo,mu)
 
 		train = list(); test = list()
+		t0=time.time()
 		for i in range(1,iters):
 			U,V,r_hat = self.matrix_fac(U,V,M,N,k,reg,step)
 			train_error = self.trainError(R,r_hat)
 			print("%s step training error %s" %(i*step,label),train_error)
-			train.append([i*step, train_error])
+			train.append([time.time()-t0, train_error])
 			test_error = self.testError(r_hat,IDpairs, trueValues)
 			print("%s step testing error %s" %(i*step,label),test_error)
-			test.append([i*step, test_error])
+			test.append([time.time()-t0, test_error])
 		return train, test	
 
 	def test(self,K,regCos,label, iters=4, step = 3):
