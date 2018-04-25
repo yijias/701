@@ -54,12 +54,12 @@ class collaborative_filter(object):
 		M = R.shape[0]
 		zipped = np.dstack((R,r_hat))
 		train_error = [[np.square(r1-r2) if r1>=1 else 0 for (r1,r2) in zipped[j]] for j in range(M)]
-		train_error = np.mean(train_error)
+		train_error = np.sqrt(np.mean(train_error))
 		return train_error
 		
 	def testError(self,r_hat,IDpairs, trueValues):	
 		test_pred = r_hat[IDpairs[0],IDpairs[1]].ravel()
-		test_error = np.mean(np.square(trueValues - test_pred))
+		test_error = np.sqrt(np.mean(np.square(trueValues - test_pred)))
 		return test_error
 
 	def facAndTest(self, k, regCo, iters, step, trueValues, IDpairs, label):

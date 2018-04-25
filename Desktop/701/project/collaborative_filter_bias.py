@@ -26,7 +26,8 @@ class collaborative_filter_bias(collaborative_filter):
                     for j, r in self.ratings_by_i[i]:
                         accum += (r - U[i,:].dot(V[:,j]) - b_item[j] - mu)
                     if len(self.ratings_by_i[i])>0:
-                        b_user[i] = accum / (1 + reg) / len(self.ratings_by_i[i])
+                        #b_user[i] = accum / (1 + reg) / len(self.ratings_by_i[i])
+                        b_user[i] = accum / (reg+len(self.ratings_by_i[i]))
 
             # update U
             for i in range(M):
@@ -45,7 +46,8 @@ class collaborative_filter_bias(collaborative_filter):
                     for i, r in self.ratings_by_j[j]:
                         accum += (r - U[i,:].dot(V[:,j]) - b_user[i] - mu)
                     if len(self.ratings_by_j[j])>0:
-                        b_item[j] = accum / (1 + reg) / len(self.ratings_by_j[j])
+                        #b_item[j] = accum / (1 + reg) / len(self.ratings_by_j[j])
+                        b_item[j] = accum / ( reg +len(self.ratings_by_j[j]))
 
             # update V
             for j in range(N):

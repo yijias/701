@@ -10,22 +10,22 @@ import random
 import statistics
 
 def plotError(data, title='', output_path=None, file_name=None, legends = None):
-    #fig = plt.figure()
+    fig = plt.figure()
     num = len(data)
     for i in range(num):
-    	plt.plot(data[i].T[0],data[i].T[1],label = legends[i])
+    	plt.plot(data[i].T[0]-data[i].T[0][0],data[i].T[1],label = legends[i])
     plt.legend()
     plt.title(title)
     plt.show()
-    #if output_path is not None and file_name is not None:
-    #    fig.savefig(os.path.join(output_path, file_name))
+    if output_path is not None and file_name is not None:
+        fig.savefig(os.path.join(output_path, file_name))
 
 def main():
 	density = 20
 	path = os.getcwd()
 	file = path + '/ratings_Musical_Instruments.csv'
 	regCo = [1]
-	K = [15]
+	K = [10]
 	data = preprocess(file,density)
 	user,item,train_user_id,train_item_id,train_rating,testSet = data.dataProcessing()
 	ratings_by_i, ratings_by_j = data.create_rating_list()
@@ -51,8 +51,8 @@ def main():
 			test = np.array([np.array(test_base[regco][k]),np.array(test_withBias[regco][k]),np.array(test_var_toOne[regco][k])])
 			#xy = np.asarray([train_base[regco][k],train_withBias[regco][k],train_var_toOne[regco][k]])
 			legends = ['base','withBias','with variance']
-			plotError(train, title = 'Train Errors',output_path=os.getcwd(), file_name = 'trains.jpg', legends = legends)
-			plotError(test, title = 'Test Errors',output_path=os.getcwd(), file_name = 'test.jpg', legends = legends)
+			plotError(train, title = 'Train Errors',output_path=os.getcwd(), file_name = 'trains_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
+			plotError(test, title = 'Test Errors',output_path=os.getcwd(), file_name = 'test_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
 
 
 if __name__ == '__main__':
