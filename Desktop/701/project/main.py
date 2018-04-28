@@ -51,8 +51,8 @@ def main():
 			test = np.array([np.array(test_base[regco][k]),np.array(test_withBias[regco][k]),np.array(test_var_toOne[regco][k])])
 			#xy = np.asarray([train_base[regco][k],train_withBias[regco][k],train_var_toOne[regco][k]])
 			legends = ['base','withBias','with variance']
-			plotError(train, title = 'Train Errors',output_path=os.getcwd(), file_name = 'trains_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
-			plotError(test, title = 'Test Errors',output_path=os.getcwd(), file_name = 'test_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
+			plotError(train, title = 'Train Errors-at least %s ratings per user-%s features' %(density,k),output_path=os.getcwd(), file_name = 'trains_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
+			plotError(test, title = 'Test Errors-at least %s ratings per user-%s features' %(density,k),output_path=os.getcwd(), file_name = 'test_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
 
 
 if __name__ == '__main__':
