@@ -88,8 +88,8 @@ class collaborative_filter(object):
 	    for regCo in regCos:
 	        TRAIN[regCo] = dict(); TEST[regCo] = dict()
 	        for k in K:
-	            print("regularization =%s",%regCo)
-	            print("K feature %s",%k)
+	            print("regularization =%s" %regCo)
+	            print("K feature %s" %k)
 	            TRAIN[regCo][k], TEST[regCo][k] = self.facAndTest(k, regCo, iters, step, trueValues, IDpairs, label)
 	    return TRAIN, TEST
 

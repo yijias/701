@@ -22,31 +22,31 @@ def plotError(data, title='', output_path=None, file_name=None, legends = None):
         fig.savefig(os.path.join(output_path, file_name))
 
 def main():
-	density = 20
+	density = 50
 	path = os.getcwd()
 	file = path + '/ratings_Musical_Instruments.csv'
 	regCo = [1]
-	K = [10]
+	K = [5]
 	data = preprocess(file,density)
 	user,item,train_user_id,train_item_id,train_rating,testSet = data.dataProcessing()
 	ratings_by_i, ratings_by_j = data.create_rating_list()
 
 	time0 = time.time()
 
-	#predict_base = collaborative_filter(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
-	#train_base, test_base = predict_base.test(K,regCo,'base line',iters = 20, step = 5)
+	predict_base = collaborative_filter(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
+	train_base, test_base = predict_base.test(K,regCo,'base line',iters = 20, step = 5)
 	time1 = time.time()
 
-	#predict_withBias = collaborative_filter_bias(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
-	#train_withBias, test_withBias = predict_withBias.test(K,regCo,'with bias',iters=10,step=3)
+	predict_withBias = collaborative_filter_bias(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
+	train_withBias, test_withBias = predict_withBias.test(K,regCo,'with bias',iters=10,step=3)
 	time2 = time.time()
 
-	#predict_var_toOne = collaborative_filter_var_toOne(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
-	#train_var_toOne, test_var_toOne = predict_var_toOne.test(K,regCo,'var_toOne',iters=6,step=1)
+	predict_var_toOne = collaborative_filter_var_toOne(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
+	train_var_toOne, test_var_toOne = predict_var_toOne.test(K,regCo,'var_toOne',iters=6,step=1)
 	time3 = time.time()
 
 	predict_new = collaborative_filter_new(user,item,train_user_id,train_item_id,train_rating,testSet,ratings_by_i,ratings_by_j)
-	train_new, test_new = predict_new.test(K,regCo,'new',iters=6,step=1)
+	train_new, test_new = predict_new.test(K,regCo,'new',iters=3,step=3)
 	time4 = time.time()
 
 	print(time1-time0,time2-time1,time3-time2, time4-time3)

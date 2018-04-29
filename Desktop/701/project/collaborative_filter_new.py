@@ -42,8 +42,15 @@ class collaborative_filter_new(collaborative_filter_bias):
     			U[u,:] += self.lr * (e_ui*V[:,i] - reg*U[u,:])
     			for p in Nu:
     				y[:,p] += self.lr*(e_ui * V[:,p]/sqrt_Nu - reg * y[:,p])
-
-    	r_hat = (U+y_u).dot(V) + np.tile(b_user,(N,1)).T + np.tile(b_item,(M,1)) + mu
+    	r_hat = np.zeros([M,N])
+    	for i in range(M):
+			for j in range(N):
+				#if R[i,j]>0:
+				Nu = self.ratings_by_i[i]
+				I_Nu = len(Nu)
+				sqrt_Nu = np.sqrt(I_Nu)
+				y_u = np.sum(y[:,Nu])/sqrt_Nu
+				r_hat[i,j] = (U[i,:]+y_u).dot(V[:,j])+b_user[i]+b_item[j]+mu
     	return U,V,b_user,b_item,y,r_hat
 
     def facAndTest(self, k, regCo, iters, step, trueValues, IDpairs,label):
