@@ -52,12 +52,12 @@ def main():
 	print(time1-time0,time2-time1,time3-time2, time4-time3)
 	for regco in regCo:
 		for k in K:
-			train = np.array([np.array(train_base[regco][k]),np.array(train_withBias[regco][k]),np.array(train_var_toOne[regco][k])])
-			test = np.array([np.array(test_base[regco][k]),np.array(test_withBias[regco][k]),np.array(test_var_toOne[regco][k])])
+			train = np.array([np.array(train_base[regco][k]),np.array(train_withBias[regco][k]),np.array(train_var_toOne[regco][k]),np.array(train_new[regco][k])])
+			test = np.array([np.array(test_base[regco][k]),np.array(test_withBias[regco][k]),np.array(test_var_toOne[regco][k]),np.array(test_new[regco][k])])
 			#xy = np.asarray([train_base[regco][k],train_withBias[regco][k],train_var_toOne[regco][k]])
-			legends = ['base','withBias','with variance']
-			plotError(train, title = 'Train Errors-at least %s ratings per user-%s features' %(density,k),output_path=os.getcwd(), file_name = 'trains_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
-			plotError(test, title = 'Test Errors-at least %s ratings per user-%s features' %(density,k),output_path=os.getcwd(), file_name = 'test_%s_%s_%s.jpg' %(density, regco, k), legends = legends)
+			legends = ['base','withBias','with variance','implicit rating']
+			plotError(train, title = 'Train Errors-at least %s ratings per user-%s features' %(density,k),output_path=os.getcwd(), file_name = 'trains_%s_%s_%s.png' %(density, regco, k), legends = legends)
+			plotError(test, title = 'Test Errors-at least %s ratings per user-%s features' %(density,k),output_path=os.getcwd(), file_name = 'test_%s_%s_%s.png' %(density, regco, k), legends = legends)
 
 
 if __name__ == '__main__':
